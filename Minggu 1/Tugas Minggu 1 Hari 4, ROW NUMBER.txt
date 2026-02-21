@@ -1,0 +1,198 @@
+Tugas Minggu 1 Hari 4, ROW NUMBER
+
+1️⃣ Ambil order pertama setiap customer (berdasarkan created_at ASC).
+
+Output minimal:
+customer_id, product, created_at, order_first
+
+Gunakan ROW_NUMBER.
+
+select * from (
+select customer_id, product, created_at, 
+row_number() over (partition by customer_id order by created_at asc) as order_first 
+from orders
+)
+where order_first = 1
+order by created_at asc
+
+11	"Laptop"	"2025-12-01"	1
+12	"Keyboard"	"2025-12-01"	1
+13	"Meja"	"2025-12-01"	1
+14	"Monitor"	"2025-12-01"	1
+15	"Laptop"	"2025-12-01"	1
+16	"Laptop"	"2025-12-05"	1
+17	"Mesiu"	"2025-12-05"	1
+
+2️⃣ Ambil order terbaru setiap customer (DESC).
+
+Mirip soal 1, tapi order by created_at DESC.
+
+select * from (
+select customer_id, product, created_at, 
+row_number() over (partition by customer_id order by created_at desc) as latest_order 
+from orders
+)
+where latest_order = 1
+
+11	"Laptop"	"2025-12-01"	1
+12	"Motor"	"2025-12-06"	1
+13	"Meja"	"2025-12-01"	1
+14	"Monitor"	"2025-12-01"	1
+15	"Laptop"	"2025-12-01"	1
+16	"Laptop"	"2025-12-05"	1
+17	"Mesiu"	"2025-12-05"	1
+
+
+3️⃣ Ambil transaksi paling mahal setiap customer.
+
+Partition by customer_id,
+Order by amount DESC.
+
+select * from (
+select customer_id, product, created_at, 
+row_number() over (partition by customer_id order by amount desc) as order_first 
+from orders
+)
+where order_first = 1
+
+11	"Laptop"	"2025-12-01"	1
+12	"Motor"	"2025-12-06"	1
+13	"Meja"	"2025-12-01"	1
+14	"Monitor"	"2025-12-01"	1
+15	"Laptop"	"2025-12-01"	1
+16	"Laptop"	"2025-12-05"	1
+17	"Mesiu"	"2025-12-05"	1
+
+4️⃣ Ambil transaksi termurah tiap customer.
+
+Partition by customer_id
+Order by amount ASC.
+
+select * from (
+select customer_id, product, created_at, 
+row_number() over (partition by customer_id order by amount asc) as order_first 
+from orders
+)
+where order_first = 1
+
+11	"Laptop"	"2025-12-01"	1
+12	"Buku Tulis"	"2025-12-06"	1
+13	"Meja"	"2025-12-01"	1
+14	"Monitor"	"2025-12-01"	1
+15	"Laptop"	"2025-12-01"	1
+16	"Laptop"	"2025-12-05"	1
+17	"Mesiu"	"2025-12-05"	1
+
+5️⃣ Ambil transaksi paling baru untuk setiap produk.
+
+Partition by product
+Order by created_at DESC.
+
+select * from (
+select customer_id, id, product, created_at, 
+row_number() over (partition by product order by created_at desc) as lates_per_product 
+from orders
+)
+where latest_per_product = 1 order by created_at
+
+12	18	"Buku Tulis"	"2025-12-06"	1
+12	12	"Keyboard"	"2025-12-01"	1
+16	16	"Laptop"	"2025-12-05"	1
+13	13	"Meja"	"2025-12-01"	1
+17	17	"Mesiu"	"2025-12-05"	1
+14	14	"Monitor"	"2025-12-01"	1
+12	19	"Motor"	"2025-12-06"	1
+
+6️⃣ Tandai order ke-berapa untuk setiap customer (order_seq).
+
+Tambah kolom:
+
+order_seq
+
+customer_id
+
+product
+
+select customer_id, id, product, created_at, 
+row_number() over (partition by customer_id order by created_at asc) as order_sec 
+from orders order by customer_id desc, order_sec asc
+
+17	17	"Mesiu"	"2025-12-05"	1
+16	16	"Laptop"	"2025-12-05"	1
+15	15	"Laptop"	"2025-12-01"	1
+14	14	"Monitor"	"2025-12-01"	1
+13	13	"Meja"	"2025-12-01"	1
+12	12	"Keyboard"	"2025-12-01"	1
+12	20	"Motor"	"2025-12-06"	2
+12	18	"Buku Tulis"	"2025-12-06"	3
+12	19	"Motor"	"2025-12-06"	4
+11	11	"Laptop"	"2025-12-01"	1
+
+7️⃣ Ambil hanya satu transaksi per customer per produk (versi window).
+
+Hint: pakai:
+
+ROW_NUMBER() OVER (PARTITION BY customer_id, product ORDER BY created_at ASC)
+
+Pilih rn = 1.
+
+select * from (
+select customer_id, id, product, created_at, 
+row_number() over (partition by customer_id, product order by created_at asc) as rn 
+from orders order by customer_id desc, rn asc
+) where rn = 1
+
+17	17	"Mesiu"	"2025-12-05"	1
+16	16	"Laptop"	"2025-12-05"	1
+15	15	"Laptop"	"2025-12-01"	1
+14	14	"Monitor"	"2025-12-01"	1
+13	13	"Meja"	"2025-12-01"	1
+12	20	"Motor"	"2025-12-06"	1
+12	12	"Keyboard"	"2025-12-01"	1
+12	18	"Buku Tulis"	"2025-12-06"	1
+11	11	"Laptop"	"2025-12-01"	1
+
+8️⃣ Ambil order pertama SETIAP negara.
+
+Butuh join customers → country lalu ROW_NUMBER.
+
+select * from (
+select c.country, o.product, row_number() over (partition by c.country order by created_at asc) as rn from orders o
+inner join customers c on c.id = o.customer_id
+) where rn = 1
+
+"Indonesia"	"Laptop"	1
+"Irak"	"Mesiu"	1
+"Netherland"	"Laptop"	1
+
+9️⃣ Tampilkan 3 order paling baru secara global (tidak pakai partition).
+
+ROW_NUMBER tanpa PARTITION (global window).
+
+select * from (
+select row_number() over (order by created_at desc) as rn, id, customer_id, product, amount, created_at from orders order by created_at desc, id desc
+) where rn <= 3
+
+2	20	12	"Motor"	17000000	"2025-12-06"
+3	19	12	"Motor"	32000000	"2025-12-06"
+1	18	12	"Buku Tulis"	120000	"2025-12-06"
+
+🔟 Tampilkan 2 order termahal setiap customer.
+
+Gunakan ROW_NUMBER + filter rn <= 2.
+
+select * from (
+select id, customer_id, product, amount, row_number() over (partition by customer_id order by amount desc) as rn from orders
+) where rn <= 2
+
+11	11	"Laptop"	10000000	1
+19	12	"Motor"	32000000	1
+20	12	"Motor"	17000000	2
+13	13	"Meja"	1000000	1
+14	14	"Monitor"	1200000	1
+15	15	"Laptop"	10000000	1
+16	16	"Laptop"	12000000	1
+17	17	"Mesiu"	12000000	1
+
+
+

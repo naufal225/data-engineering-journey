@@ -1,0 +1,341 @@
+🔷 INNER JOIN (1–7)
+
+1. Tampilkan name, product, amount untuk semua order.
+select c.name, o.product, o.amount from orders o inner join customers c on o.customer_id = c.id;
+"Budi"	"Laptop"	10000000
+"Asep"	"Keyboard"	3000000
+"Jamal"	"Meja"	1000000
+"Abdul"	"Monitor"	1200000
+"Apage"	"Laptop"	10000000
+"Mr. Tim"	"Laptop"	12000000
+"Osama Bin Laden"	"Mesiu"	12000000
+"Asep"	"Buku Tulis"	120000
+
+
+2. Tampilkan customers Indonesia saja yang punya order.
+select c.name, o.product, o.amount from customers c inner join orders o 
+on o.customer_id = c.id where c.country = 'Indonesia';
+"Budi"	"Laptop"	10000000
+"Asep"	"Keyboard"	3000000
+"Jamal"	"Meja"	1000000
+"Abdul"	"Monitor"	1200000
+"Apage"	"Laptop"	10000000
+"Asep"	"Buku Tulis"	120000
+
+
+3. Tampilkan orders milik customer bernama “Budi”.
+select c.name, o.product, o.amount from customers c
+inner join orders o on o.customer_id = c.id
+where c.name = 'Budi';
+"Budi"	"Laptop"	10000000
+
+
+4. Tampilkan product dan email customer untuk setiap order.
+select c.email, o.product from customers c
+inner join orders o on o.customer_id = c.id;
+"budi1@gmail.com"	"Laptop"
+"asep@gmail.com"	"Keyboard"
+"jamal@gmail.com"	"Meja"
+"adbul@gmail.com"	"Monitor"
+"apage@gmail.com"	"Laptop"
+"tim@gmail.com"	"Laptop"
+"osama212@gmail.com"	"Mesiu"
+"asep@gmail.com"	"Buku Tulis"
+
+
+5. Tampilkan name + total amount per order.
+select c.name, o.amount from orders o inner join customers c 
+on c.id = o.customer_id;
+"Budi"	10000000
+"Asep"	3000000
+"Jamal"	1000000
+"Abdul"	1200000
+"Apage"	10000000
+"Mr. Tim"	12000000
+"Osama Bin Laden"	12000000
+"Asep"	120000
+
+bisa juga
+select c.name, sum(o.amount) as total from orders o inner join customers c 
+on c.id = o.customer_id group by c.name;
+"Abdul"	1200000
+"Budi"	10000000
+"Osama Bin Laden"	12000000
+"Mr. Tim"	12000000
+"Asep"	3120000
+"Jamal"	1000000
+"Apage"	10000000
+
+
+6. Tampilkan name + product untuk orders dengan amount > 5.000.000.
+select c.name, o.product from customers c inner join orders o 
+on c.id = o.customer_id where o.amount > 5000000;
+"Budi"	"Laptop"
+"Apage"	"Laptop"
+"Mr. Tim"	"Laptop"
+"Osama Bin Laden"	"Mesiu"
+
+
+7. Tampilkan semua orders milik customer yang negara-nya bukan Indonesia.
+select c.name, o.product, o.amount, o.created_at
+from orders o
+inner join customers c
+on c.id = o.customer_id
+where c.country != 'Indonesia';
+"Mr. Tim"	"Laptop"	12000000	"2025-12-05"
+"Osama Bin Laden"	"Mesiu"	12000000	"2025-12-05"
+
+
+🟩 LEFT JOIN (8–14)
+
+8. Tampilkan semua customers beserta product order-nya.
+select c.*, o.product from customers c
+left join orders o
+on o.customer_id = c.id;
+11	"Budi"	"budi1@gmail.com"	"Indonesia"	"Laptop"
+12	"Asep"	"asep@gmail.com"	"Indonesia"	"Keyboard"
+13	"Jamal"	"jamal@gmail.com"	"Indonesia"	"Meja"
+14	"Abdul"	"adbul@gmail.com"	"Indonesia"	"Monitor"
+15	"Apage"	"apage@gmail.com"	"Indonesia"	"Laptop"
+16	"Mr. Tim"	"tim@gmail.com"	"Netherland"	"Laptop"
+17	"Osama Bin Laden"	"osama212@gmail.com"	"Irak"	"Mesiu"
+12	"Asep"	"asep@gmail.com"	"Indonesia"	"Buku Tulis"
+18	"Joko"	"joko1@gmail.com"	"Indonesia"	
+
+
+9. Tampilkan customers yang BELUM punya order.
+select c.name, o.amount from customers c left join orders o
+on o.customer_id = c.id where o.id is null;
+"Joko"	[null]
+
+(kalua ada cara yang lebih baik, beri tahu saya)
+
+10. Tampilkan customers + jumlah order yang mereka lakukan.
+select 
+	c.name,
+	case
+		when count(o.id) is null then
+			0
+		else count(o.id)
+	end
+from customers c
+left join orders o
+on c.id = o.customer_id
+group by c.name
+
+"Abdul"	1
+"Joko"	0
+"Budi"	1
+"Osama Bin Laden"	1
+"Mr. Tim"	1
+"Asep"	2
+"Jamal"	1
+"Apage"	1
+
+
+(kalua ada cara yang lebih baik, kasih tau saya)
+
+(ternyata bisa gini)
+
+select 
+	c.name,
+	count(o.id)
+from customers c
+left join orders o
+on c.id = o.customer_id
+group by c.name
+
+"Abdul"	1
+"Joko"	0
+"Budi"	1
+"Osama Bin Laden"	1
+"Mr. Tim"	1
+"Asep"	2
+"Jamal"	1
+"Apage"	1
+
+11. Tampilkan customers + total pengeluaran (SUM amount).
+select 
+	c.name,
+	case
+		when count(o.id) = 0 then 0
+		else sum(o.amount)
+	end as expenses
+from customers c
+left join orders o
+on c.id = o.customer_id
+group by c.name
+"Abdul"	1200000
+"Joko"	0
+"Budi"	10000000
+"Osama Bin Laden"	12000000
+"Mr. Tim"	12000000
+"Asep"	3120000
+"Jamal"	1000000
+"Apage"	10000000
+
+perbaikan:
+
+select 
+	c.name,
+	coalesce(o.amount, 0) as expenses
+from customers c
+left join orders o
+on c.id = o.customer_id
+group by c.name, o.amount
+"Jamal"	1000000
+"Asep"	120000
+"Joko"	0
+"Mr. Tim"	12000000
+"Abdul"	1200000
+"Apage"	10000000
+"Budi"	10000000
+"Osama Bin Laden"	12000000
+"Asep"	3000000
+
+12. Tampilkan customers dari Indonesia + semua order mereka.
+select c.name, c.country, o.product, o.amount, o.created_at from customers c
+inner join orders o on c.id = o.customer_id where c.country = 'Indonesia';
+"Budi"	"Indonesia"	"Laptop"	10000000	"2025-12-01"
+"Asep"	"Indonesia"	"Keyboard"	3000000	"2025-12-01"
+"Jamal"	"Indonesia"	"Meja"	1000000	"2025-12-01"
+"Abdul"	"Indonesia"	"Monitor"	1200000	"2025-12-01"
+"Apage"	"Indonesia"	"Laptop"	10000000	"2025-12-01"
+"Asep"	"Indonesia"	"Buku Tulis"	120000	"2025-12-06"
+
+select c.name, c.country, o.product, o.amount, o.created_at from customers c
+left join orders o on c.id = o.customer_id where c.country = 'Indonesia';
+"Budi"	"Indonesia"	"Laptop"	10000000	"2025-12-01"
+"Asep"	"Indonesia"	"Keyboard"	3000000	"2025-12-01"
+"Jamal"	"Indonesia"	"Meja"	1000000	"2025-12-01"
+"Abdul"	"Indonesia"	"Monitor"	1200000	"2025-12-01"
+"Apage"	"Indonesia"	"Laptop"	10000000	"2025-12-01"
+"Asep"	"Indonesia"	"Buku Tulis"	120000	"2025-12-06"
+"Joko"	"Indonesia"			
+
+13. Tampilkan product + name customer (walau customer tidak ada → NULL).
+select o.product, c.name from customers c left join orders o
+on o.customer_id = c.id;
+"Laptop"	"Budi"
+"Keyboard"	"Asep"
+"Meja"	"Jamal"
+"Monitor"	"Abdul"
+"Laptop"	"Apage"
+"Laptop"	"Mr. Tim"
+"Mesiu"	"Osama Bin Laden"
+"Buku Tulis"	"Asep"
+null     	"Joko"
+
+(disaya semua orders pasti ada id customer nya, jadi gini aja ya yang pentibg saya paham, atau saya malah salah? nanti koreksi aja)
+
+perbaikan:
+select o.product, c.name from orders o left join customers c
+on o.customer_id = c.id;
+
+"Laptop"	"Budi"
+"Keyboard"	"Asep"
+"Meja"	"Jamal"
+"Monitor"	"Abdul"
+"Laptop"	"Apage"
+"Laptop"	"Mr. Tim"
+"Mesiu"	"Osama Bin Laden"
+"Buku Tulis"	"Asep"
+
+14. Tampilkan customer yang email-nya mengandung ‘gmail’.
+select * from customers where email like '%gmail%';
+11	"Budi"	"budi1@gmail.com"	"Indonesia"
+12	"Asep"	"asep@gmail.com"	"Indonesia"
+13	"Jamal"	"jamal@gmail.com"	"Indonesia"
+14	"Abdul"	"adbul@gmail.com"	"Indonesia"
+15	"Apage"	"apage@gmail.com"	"Indonesia"
+16	"Mr. Tim"	"tim@gmail.com"	"Netherland"
+17	"Osama Bin Laden"	"osama212@gmail.com"	"Irak"
+18	"Joko"	"joko1@gmail.com"	"Indonesia"
+
+🟧 MIXED JOIN (15–20)
+
+15. Tampilkan daftar negara + total transaksi dari negara tersebut.
+select c.country, sum(o.amount) from customers c
+inner join orders o
+on c.id = o.customer_id
+group by c.country;
+"Indonesia"	25320000
+"Irak"	12000000
+"Netherland"	12000000
+
+16. Tampilkan top 3 customer berdasarkan nilai total order.
+select c.name, c.country, c.email, sum(o.amount) as total from customers c
+inner join orders o
+on c.id = o.customer_id
+group by c.name, c.country, c.email
+order by total desc limit 3
+"Osama Bin Laden"	"Irak"	"osama212@gmail.com"	12000000
+"Mr. Tim"	"Netherland"	"tim@gmail.com"	12000000
+"Budi"	"Indonesia"	"budi1@gmail.com"	10000000
+
+
+17. Tampilkan semua product + negara customer yang membelinya.
+select o.product, c.country from orders o inner join customers c on c.id = o.customer_id
+"Laptop"	"Indonesia"
+"Keyboard"	"Indonesia"
+"Meja"	"Indonesia"
+"Monitor"	"Indonesia"
+"Laptop"	"Indonesia"
+"Laptop"	"Netherland"
+"Mesiu"	"Irak"
+"Buku Tulis"	"Indonesia"
+
+18. Tampilkan jumlah distinct product yang dibeli setiap customer.
+select distinct o.product from orders o;
+
+"Mesiu"
+"Buku Tulis"
+"Keyboard"
+"Monitor"
+"Laptop"
+"Meja"
+
+perbaikan:
+select c.name, count(distinct o.product)
+from customers c left join orders o
+on c.id = o.customer_id
+group by c.name;
+
+"Abdul"	1
+"Apage"	1
+"Asep"	2
+"Budi"	1
+"Jamal"	1
+"Joko"	0
+"Mr. Tim"	1
+"Osama Bin Laden"	1
+
+19. Tampilkan customer yang membeli lebih dari 1 jenis produk.
+select case when count(o.id) > 1 then c.name end from orders o inner join customers c on c.id = o.customer_id group by c.name;
+
+null
+null
+null
+null
+"Asep"
+null
+null
+
+
+select c.name from orders o inner join customers c on c.id = o.customer_id group by c.name having count(o.id) > 1;
+
+"Asep"
+
+20. Tampilkan semua orders yang tidak punya customer (pakai RIGHT JOIN / FULL JOIN).
+select * from orders o full join customers c
+on c.id = o.customer_id;
+11	11	"Laptop"	10000000	"2025-12-01"	11	"Budi"	"budi1@gmail.com"	"Indonesia"
+12	12	"Keyboard"	3000000	"2025-12-01"	12	"Asep"	"asep@gmail.com"	"Indonesia"
+13	13	"Meja"	1000000	"2025-12-01"	13	"Jamal"	"jamal@gmail.com"	"Indonesia"
+14	14	"Monitor"	1200000	"2025-12-01"	14	"Abdul"	"adbul@gmail.com"	"Indonesia"
+15	15	"Laptop"	10000000	"2025-12-01"	15	"Apage"	"apage@gmail.com"	"Indonesia"
+16	16	"Laptop"	12000000	"2025-12-05"	16	"Mr. Tim"	"tim@gmail.com"	"Netherland"
+17	17	"Mesiu"	12000000	"2025-12-05"	17	"Osama Bin Laden"	"osama212@gmail.com"	"Irak"
+18	12	"Buku Tulis"	120000	"2025-12-06"	12	"Asep"	"asep@gmail.com"	"Indonesia"
+					18	"Joko"	"joko1@gmail.com"	"Indonesia"
+

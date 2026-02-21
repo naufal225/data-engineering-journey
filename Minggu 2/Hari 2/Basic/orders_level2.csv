@@ -1,0 +1,11 @@
+order_id,customer_id,amount,status,country,created_at
+1,101,"15,000",paid,Indonesia,2024-01-05
+2,102,"20000", FAILED ,Indonesia,01/07/2024
+3,101,"5.000",Paid,malaysia,2024/01/10
+4,103,,refunded ,Thailand,2024-01-12
+5,104,"7,500",PAID,Singapore,2024-01-15
+6,105,"0",Failed, indonesia ,2024-01-17
+7,102,"12,000", paid ,Malaysia,2024-1-20
+8,106,"18500",PAID,Singapore,2024-01-22
+9,107,"100,000",PAID,ID,25-01-2024
+10,108,"25,000",REFUNDED,TH,2024/01/30

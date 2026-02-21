@@ -1,0 +1,466 @@
+🧪 SOAL 1 — First Activity per User (FOUNDATION)
+
+Tujuan:
+Menentukan hari pertama user aktif (first_order_date)
+
+Output minimal:
+
+customer_id
+
+first_order_date
+
+Clue berpikir:
+
+Satu user bisa punya banyak order
+
+Ambil order paling awal
+
+⚠️ Jangan pakai MIN() dulu — pakai window function
+
+🧠 Hint:
+ROW_NUMBER() PARTITION BY customer_id ORDER BY created_at ASC
+
+jawab:
+
+WITH base AS (
+  SELECT
+    customer_id,
+    created_at,
+    ROW_NUMBER() OVER (
+      PARTITION BY customer_id
+      ORDER BY created_at, id
+    ) AS rn
+  FROM orders
+  WHERE customer_id IS NOT NULL
+)
+SELECT
+  customer_id,
+  created_at AS first_order_date
+FROM base
+WHERE rn = 1;
+
+
+11	"2025-12-01"
+12	"2025-12-01"
+13	"2025-12-01"
+14	"2025-12-01"
+15	"2025-12-01"
+16	"2025-12-05"
+17	"2025-12-05"
+
+
+🧪 SOAL 2 — Tandai Order ke-N per User
+
+Tujuan:
+Mengetahui apakah ini order pertama, kedua, ketiga, dst
+
+Output minimal:
+
+customer_id
+
+order_id
+
+created_at
+
+order_seq
+
+Clue berpikir:
+
+Ini sequence, bukan agregasi
+
+Harus konsisten walau ada tanggal sama
+
+🧠 Hint:
+ROW_NUMBER() + ORDER BY created_at, id
+
+jawab:
+
+select customer_id, id as order_id, created_at,
+row_number() over (partition by customer_id order by created_at,id) as order_seq
+from orders where customer_id is not null
+
+11	11	"2025-12-01"	1
+12	12	"2025-12-01"	1
+12	18	"2025-12-06"	2
+12	19	"2025-12-06"	3
+12	20	"2025-12-06"	4
+13	13	"2025-12-01"	1
+14	14	"2025-12-01"	1
+15	15	"2025-12-01"	1
+16	16	"2025-12-05"	1
+17	17	"2025-12-05"	1
+
+
+🧪 SOAL 3 — Hitung Selisih Hari dari First Order
+
+Tujuan:
+Menghitung hari keberapa user aktif sejak pertama kali order
+
+Output minimal:
+
+customer_id
+
+order_id
+
+first_order_date
+
+current_order_date
+
+day_since_first_order
+
+Clue berpikir:
+
+Ambil first_order_date
+
+Gabungkan ke order lain
+
+Hitung selisih hari
+
+🧠 Hint:
+
+Window function untuk first date
+
+DATE_PART('day', ...) atau created_at - first_order_date
+
+jawab:
+
+with base as (select customer_id, id as order_id, min(created_at) over(partition by customer_id) as first_order_date,
+created_at as current_order_date from orders where customer_id is not null)
+select customer_id, order_id, first_order_date, current_order_date, current_order_date - first_order_date as day_since_first_order from base
+order by customer_id, order_id
+
+11	11	"2025-12-01"	"2025-12-01"	0
+12	12	"2025-12-01"	"2025-12-01"	0
+12	18	"2025-12-01"	"2025-12-06"	5
+12	19	"2025-12-01"	"2025-12-06"	5
+12	20	"2025-12-01"	"2025-12-06"	5
+13	13	"2025-12-01"	"2025-12-01"	0
+14	14	"2025-12-01"	"2025-12-01"	0
+15	15	"2025-12-01"	"2025-12-01"	0
+16	16	"2025-12-05"	"2025-12-05"	0
+17	17	"2025-12-05"	"2025-12-05"	0
+
+refine:
+
+with ordered_orders as (
+	select
+		id as order_id,
+		customer_id,
+		created_at,
+		row_number() over(
+			partition by customer_id
+			order by created_at, id
+		) as rn
+	from orders 
+	where customer_id is not null
+),
+first_order as (
+	select
+		order_id,
+		customer_id,
+		created_at as first_order_date
+	from ordered_orders 
+	where rn = 1
+)
+
+select 
+	o.customer_id,
+	o.id as order_id,
+	f.first_order_date,
+	o.created_at as current_order_date,
+	o.created_at - f.first_order_date as day_since_first_order
+from orders o 
+join first_order f on f.customer_id = o.customer_id
+order by customer_id, id
+
+11	11	"2025-12-01"	"2025-12-01"	0
+12	12	"2025-12-01"	"2025-12-01"	0
+12	18	"2025-12-01"	"2025-12-06"	5
+12	19	"2025-12-01"	"2025-12-06"	5
+12	20	"2025-12-01"	"2025-12-06"	5
+13	13	"2025-12-01"	"2025-12-01"	0
+14	14	"2025-12-01"	"2025-12-01"	0
+15	15	"2025-12-01"	"2025-12-01"	0
+16	16	"2025-12-05"	"2025-12-05"	0
+17	17	"2025-12-05"	"2025-12-05"	0
+
+
+🧪 SOAL 4 — Flag Retention Day 0, Day 1, Day 7
+
+Tujuan:
+Menandai apakah order ini termasuk:
+
+Day 0 (hari pertama)
+
+Day 1
+
+Day 7
+
+Output minimal:
+
+customer_id
+
+order_id
+
+day_since_first_order
+
+retention_label (D0, D1, D7, OTHER)
+
+Clue berpikir:
+
+Retention = perbedaan hari
+
+Bukan per row, tapi per user journey
+
+🧠 Hint:
+CASE WHEN day_since_first_order = 0 THEN 'D0' ...
+
+jawab:
+
+with ordered_orders as (
+	select
+		id as order_id,
+		customer_id,
+		created_at,
+		product,
+		amount,
+		row_number() over(
+			partition by customer_id
+			order by created_at, id
+		) as rn
+	from orders 
+	where customer_id is not null
+), first_order as (
+	select 
+		order_id, 
+		customer_id,
+		created_at as first_order_rate
+	from ordered_orders 
+	where rn = 1
+), day_since as (
+	select
+		oo.order_id,
+		oo.customer_id,
+		oo.product,
+		oo.amount,
+		oo.created_at,
+		oo.created_at - fo.first_order_rate as day_since_first_order
+	from ordered_orders oo
+	join first_order fo on
+		oo.customer_id = fo.customer_id
+)
+
+select 
+	order_id,
+	customer_id,
+	product,
+	amount,
+	created_at,
+	day_since_first_order,
+	case 
+		when day_since_first_order = 0 then 'D0'
+		when day_since_first_order = 1 then 'D1'
+		when day_since_first_order = 7 then 'D7'
+		else 'OTHER'
+	end as retention_label
+from day_since;
+	
+11	11	"Laptop"	10000000	"2025-12-01"	0	"D0"
+12	12	"Keyboard"	3000000	"2025-12-01"	0	"D0"
+18	12	"Buku Tulis"	120000	"2025-12-06"	5	"OTHER"
+19	12	"Motor"	32000000	"2025-12-06"	5	"OTHER"
+20	12	"Motor"	17000000	"2025-12-06"	5	"OTHER"
+13	13	"Meja"	1000000	"2025-12-01"	0	"D0"
+14	14	"Monitor"	1200000	"2025-12-01"	0	"D0"
+15	15	"Laptop"	10000000	"2025-12-01"	0	"D0"
+16	16	"Laptop"	12000000	"2025-12-05"	0	"D0"
+17	17	"Mesiu"	12000000	"2025-12-05"	0	"D0"
+
+
+🧪 SOAL 5 — Daily Retention Count (CORE METRIC)
+
+Tujuan:
+Menghitung berapa user aktif di Day 0, Day 1, Day 2, dst
+
+Output minimal:
+
+day_since_first_order
+
+active_user_count
+
+Clue berpikir:
+
+Satu user hanya dihitung sekali per hari
+
+Jangan double count user
+
+🧠 Hint:
+
+DISTINCT user
+
+GROUP BY day
+
+jawab:
+
+with ordered_orders as (
+	select
+		id as order_id,
+		customer_id,
+		created_at,
+		product,
+		amount,
+		row_number() over(
+			partition by customer_id
+			order by created_at, id
+		) as rn
+	from orders 
+	where customer_id is not null
+), first_order as (
+	select 
+		order_id, 
+		created_at,
+		customer_id,
+		created_at as first_order_date
+	from ordered_orders 
+	where rn = 1
+), day_since as (
+	select
+		row_number() over(
+			order by oo.created_at
+		) as day_n,
+		oo.created_at,
+		oo.customer_id,
+		fo.first_order_date,
+		oo.created_at - fo.first_order_date as day_since_first_order
+	from ordered_orders oo
+	join first_order fo on
+		oo.customer_id = fo.customer_id
+	group by 
+		first_order_date, 
+		oo.customer_id,
+		oo.created_at,
+		day_since_first_order
+), active_users as (
+	select 
+		day_since_first_order, 
+		count(distinct customer_id) as active_users_count
+	from day_since
+	group by 
+		day_since_first_order
+)
+
+select * from active_users;
+
+
+
+0	7
+5	1
+
+
+🧪 SOAL 6 — Retention Rate (%)
+
+Tujuan:
+Menghitung retention rate (%) dibanding Day 0
+
+Output minimal:
+
+day_since_first_order
+
+active_user
+
+retention_rate_percent
+
+Clue berpikir:
+
+Day 0 = baseline
+
+Semua hari dibagi Day 0
+
+🧠 Hint:
+
+Window function untuk ambil total Day 0
+
+active_user / first_day_user
+
+jawab:
+
+with ordered_orders as (
+	select
+		customer_id,
+		created_at,
+		row_number() over(
+			partition by customer_id
+			order by created_at, id
+		) as rn
+	from orders 
+	where customer_id is not null
+), first_order as (
+	select 
+		customer_id,
+		created_at as first_order_date
+	from ordered_orders 
+	where rn = 1
+), day_since as (
+	select
+		oo.created_at,
+		oo.customer_id,
+		oo.created_at - fo.first_order_date as day_since_first_order
+	from ordered_orders oo
+	join first_order fo on
+		oo.customer_id = fo.customer_id
+), active_users as (
+	select 
+		day_since_first_order, 
+		count(distinct customer_id) as active_users_count
+	from day_since
+	group by 
+		day_since_first_order
+)
+
+select 
+	day_since_first_order,
+	active_users_count,
+	round(active_users_count * 1.0 / first_value(active_users_count) 
+		over(order by day_since_first_order) * 100, 2) as retention_rate
+from active_users;
+
+
+
+0	7	100.00
+5	1	14.29
+
+
+
+🧪 SOAL 7 — Retention Curve (FINAL DELIVERABLE)
+
+Tujuan:
+Dataset siap dipakai untuk chart retention (Looker / Metabase)
+
+Output minimal:
+
+day_since_first_order
+
+retention_rate_percent
+
+Clue berpikir:
+
+Ini output final Day 5
+
+Harus bersih, satu baris per hari
+
+🧠 Hint:
+CTE bertingkat:
+
+first_order
+
+day_diff
+
+aggregation
+
+rate
+
+jawab:
+
+
+
+

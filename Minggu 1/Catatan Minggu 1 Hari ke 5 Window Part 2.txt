@@ -1,0 +1,28 @@
+📝 PART 2 — CATATAN RAPI (SIAP DISIMPAN DI NOTEPAD)
+📘 TIER 1 — WINDOW FUNDAMENTALS
+🔹 SOAL 1 — Running Total per Product
+SUM(amount) OVER (
+  PARTITION BY product
+  ORDER BY created_at
+  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+)
+
+🔹 SOAL 2 — Persentase Kontribusi per Customer
+amount * 100.0 /
+SUM(amount) OVER (
+  PARTITION BY customer_id
+  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+)
+
+🔹 SOAL 3 — Rolling Sum (Last 3 Transactions)
+SUM(amount) OVER (
+  PARTITION BY customer_id
+  ORDER BY created_at
+  ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+)
+
+🔹 SOAL 4 — Delta Transaksi
+amount - LAG(amount) OVER (
+  PARTITION BY customer_id
+  ORDER BY created_at
+)

@@ -1,0 +1,274 @@
+## 🔥 JAWABAN PERTANYAAN UTAMA LU
+
+> **“Kenapa pakai `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`
+> padahal tanpa itu hasilnya sama?”**
+
+### ✅ Jawaban pendek (penting):
+
+Karena **ORDER BY + window function punya default frame = RANGE**,
+dan **dalam kasus tertentu kebetulan hasilnya sama**, tapi **secara konsep BERBEDA & berbahaya**.
+
+---
+
+### 🧠 Detail yang harus lu pegang
+
+Query lu:
+
+```sql
+SUM(amount) OVER (
+  PARTITION BY customer_id
+)
+```
+
+Artinya **tanpa ORDER BY**, maka:
+
+* PostgreSQL pakai:
+
+```sql
+ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+```
+
+➡️ Semua baris dalam partisi dihitung
+➡️ **Aman**
+
+---
+
+TAPI saat lu nulis:
+
+```sql
+SUM(amount) OVER (
+  PARTITION BY customer_id
+  ORDER BY created_at
+)
+```
+
+⚠️ Default-nya berubah jadi:
+
+```sql
+RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+```
+
+Bukan ROWS.
+
+Kalau `created_at`:
+
+* unik → hasil mirip
+* **tidak unik (tanggal sama)** → hasil **loncat**
+
+📌 **Kesimpulan aturan emas**
+
+> Kalau pakai `ORDER BY` dan MAU total penuh → **WAJIB tulis ROWS eksplisit**
+
+---
+
+## 🧪 KOREKSI JAWABAN LU (Tier 1)
+
+---
+
+### ✅ NOMOR 1 — RUNNING TOTAL (BENAR, sedikit dirapikan)
+
+**Jawaban lu:**
+
+```sql
+sum(amount) over (
+  partition by product 
+  order by created_at 
+  rows between unbounded preceding and current row
+)
+```
+
+✔️ **BENAR**
+✔️ Sudah pakai ROWS
+✔️ Sudah aman dari duplicate date
+
+📌 **Catatan kecil**:
+Biasanya running total **per customer atau per time**, bukan per product.
+Tapi secara teknis **query lu benar**.
+
+---
+
+### ❌ NOMOR 2 — PERSENTASE KONTRIBUSI (KONSEP BENAR, FRAME PERLU DIRAPIKAN)
+
+**Jawaban lu:**
+
+```sql
+amount / sum(amount) over(
+  partition by customer_id 
+  order by created_at 
+  rows between unbounded preceding and unbounded following
+) * 100
+```
+
+### 🔧 Perbaikan penting
+
+`ORDER BY created_at` **TIDAK PERLU** kalau mau total penuh.
+
+Versi **lebih bersih & aman**:
+
+```sql
+amount * 100.0
+/ SUM(amount) OVER (
+  PARTITION BY customer_id
+) AS percentage
+```
+
+📌 Kenapa?
+
+* Tanpa ORDER BY → default full partition
+* Lebih jelas secara niat bisnis
+* Lebih sedikit risiko
+
+---
+
+### ⚠️ NOMOR 3 — SLIDING WINDOW (LOGIKA BENAR, NAMA PERLU DILURUSKAN)
+
+**Jawaban lu:**
+
+```sql
+ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+```
+
+⚠️ Ini artinya:
+
+> “Baris ini + **3 baris sebelumnya**”
+> ➡️ **TOTAL = 4 baris**, bukan 3
+
+📌 Kalau niat lu:
+
+* “baris ini + 2 sebelumnya” → pakai `2 PRECEDING`
+* “rolling 4 transaksi” → ini sudah benar
+
+✅ Query lu **SECARA TEKNIS BENAR**, cuma **label/nama harus akurat**
+
+---
+
+### ⚠️ NOMOR 4 — LAG / DELTA (BENAR, TAPI BOROS)
+
+Query lu **BENAR SECARA LOGIKA**, tapi ada **anti-pattern kecil**:
+
+Lu memanggil `LAG()` **3 kali**.
+
+### 🔧 Versi lebih rapi (BEST PRACTICE)
+
+```sql
+WITH base AS (
+  SELECT
+    id,
+    customer_id,
+    product,
+    amount,
+    created_at,
+    LAG(amount) OVER (
+      PARTITION BY customer_id
+      ORDER BY created_at
+    ) AS prev_amount
+  FROM orders
+)
+SELECT
+  *,
+  amount - prev_amount AS delta,
+  CASE
+    WHEN prev_amount IS NULL THEN 'Tidak Ada'
+    WHEN amount > prev_amount THEN 'Naik'
+    WHEN amount < prev_amount THEN 'Turun'
+    ELSE 'Tetap'
+  END AS indikator
+FROM base;
+```
+
+📌 Lebih:
+
+* efisien
+* readable
+* production-ready
+
+---
+
+## 📝 CATATAN FINAL (SIAP SIMPAN KE NOTEPAD)
+
+---
+
+### 🥇 TIER 1 — WINDOW FUNCTION FUNDAMENTAL
+
+---
+
+### **1️⃣ Running Total (Cumulative)**
+
+**Kasus:** Total berjalan per customer
+
+```sql
+SELECT
+  id,
+  customer_id,
+  amount,
+  SUM(amount) OVER (
+    PARTITION BY customer_id
+    ORDER BY created_at
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  ) AS running_total
+FROM orders;
+```
+
+---
+
+### **2️⃣ Total Penuh per Customer (Untuk Persentase)**
+
+```sql
+SELECT
+  id,
+  customer_id,
+  amount,
+  amount * 100.0
+  / SUM(amount) OVER (
+    PARTITION BY customer_id
+  ) AS percentage
+FROM orders;
+```
+
+---
+
+### **3️⃣ Sliding Window (Rolling N Transaksi)**
+
+**Kasus:** Total transaksi ini + 3 sebelumnya
+
+```sql
+SELECT
+  id,
+  customer_id,
+  amount,
+  SUM(amount) OVER (
+    PARTITION BY customer_id
+    ORDER BY created_at
+    ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+  ) AS rolling_total
+FROM orders;
+```
+
+---
+
+### **4️⃣ Delta Transaksi (Naik / Turun)**
+
+```sql
+WITH base AS (
+  SELECT
+    id,
+    customer_id,
+    amount,
+    created_at,
+    LAG(amount) OVER (
+      PARTITION BY customer_id
+      ORDER BY created_at
+    ) AS prev_amount
+  FROM orders
+)
+SELECT
+  *,
+  amount - prev_amount AS delta,
+  CASE
+    WHEN prev_amount IS NULL THEN 'Tidak Ada'
+    WHEN amount > prev_amount THEN 'Naik'
+    WHEN amount < prev_amount THEN 'Turun'
+    ELSE 'Tetap'
+  END AS indikator
+FROM base;
+```

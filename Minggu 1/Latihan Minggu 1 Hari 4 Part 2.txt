@@ -1,0 +1,66 @@
+SOAL 1
+
+Tampilkan customer yang total belanjanya lebih besar dari rata-rata total belanja semua customer.
+
+Clue berpikir (bukan query):
+
+Hitung total belanja per customer
+
+Hitung rata-ratanya
+
+Bandingkan
+
+jawab:
+
+select c.id, c.name, sum(o.amount) as total_spent from customers c
+inner join orders o on o.customer_id = c.id
+group by c.id, c.name
+having sum(o.amount) > (
+select avg(total_per_customer) from (
+	select sum(amount) as total_per_customer from orders o group by o.customer_id
+) t
+)
+
+12	"Asep"	52120000
+
+SOAL 2
+
+Tampilkan produk yang harga transaksinya lebih besar dari rata-rata harga semua transaksi.
+
+📌 Perhatikan: ini per transaksi, bukan per produk total.
+
+jawab:
+
+select o.product, o.amount, avg(o.amount) over () from orders o
+where o.amount > (
+	select avg(o2.amount) from orders o2
+)
+
+"Laptop"	10000000	15500000.000000000000
+"Laptop"	10000000	15500000.000000000000
+"Laptop"	12000000	15500000.000000000000
+"Mesiu"	12000000	15500000.000000000000
+"Motor"	32000000	15500000.000000000000
+"Motor"	17000000	15500000.000000000000
+
+
+SOAL 3
+
+Tampilkan customer yang pernah punya minimal 1 order di atas 5 juta.
+
+📌 WAJIB pakai subquery, jangan JOIN langsung.
+
+select c.id, c.name, c.country
+from customers c
+where exists (
+  select 1
+  from orders o
+  where o.customer_id = c.id
+    and o.amount > 5000000
+);
+
+11	"Budi"	"Indonesia"
+15	"Apage"	"Indonesia"
+16	"Mr. Tim"	"Netherland"
+17	"Osama Bin Laden"	"Irak"
+12	"Asep"	"Indonesia"

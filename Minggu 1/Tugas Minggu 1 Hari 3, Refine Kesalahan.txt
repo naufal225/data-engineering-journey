@@ -1,0 +1,148 @@
+Tugas Minggu 1 Hari 3, Refine Kesalahan
+
+1. Tabel customers punya dua orang bernama "Asep", tetapi dengan ID berbeda.
+
+Tugas:
+Tampilkan total transaction amount per customer tanpa salah menggabungkan dua orang bernama sama.
+
+select c.name, count(distinct o.product), sum(o.amount) from customers c
+inner join orders o on c.id = o.customer_id
+group by c.id, c.name;
+
+
+
+2. Hitung total uang yang dikeluarkan setiap customer hanya untuk produk unik yang dia beli.
+
+Contoh:
+Kalau Asep beli Laptop 3x, hitung Laptop hanya sekali.
+
+select pu.customer_id, pu.customer_name, pu.product, pu.total_unique_product, pu.total_expenses from (
+select distinct o.product as product, count(o.product) total_unique_product,
+c.id as customer_id, c.name as customer_name, sum(o.amount) as total_expenses from customers c
+inner join orders o on c.id = o.customer_id
+group by distinct o.product, c.id, c.name
+) pu 
+order by pu.customer_id, pu.customer_name, pu.product
+
+3. Perbaiki query berikut yang SALAH logika:
+
+SELECT product, SUM(amount)
+FROM orders
+WHERE SUM(amount) > 5000000
+GROUP BY product;
+
+
+Tugas:
+Perbaiki query-nya dan jelaskan kenapa query awal salah (jawaban penjelasan singkat dalam komentar SQL).
+
+SELECT product, SUM(amount)
+FROM orders
+GROUP BY product
+having SUM(amount) > 5000000;
+
+kalua mau filter setelah agregat pakai having jangan where
+
+4. Ambil semua product yang memiliki total revenue di atas 5 juta,
+TAPI hanya hitung transaksi dengan amount di atas 500 ribu.
+
+Gunakan WHERE + HAVING secara benar.
+
+select distinct o.product, sum(o.amount) from orders o
+where o.amount > 500000
+group by o.product
+having sum(o.amount) > 5000000
+
+5. Tampilkan customer yang melakukan minimal 2 order,
+tetapi jumlah product unik-nya harus 1.
+
+Artinya:
+Beli produk yang sama lebih dari sekali.
+
+
+select c.id, c.name, o.product, count(o.product), sum(o.amount) from orders o
+inner join customers c on c.id = o.customer_id
+group by c.id, c.name, o.product
+having count(o.product) > 1
+
+6. Perbaiki query salah berikut:
+
+SELECT name, SUM(amount)
+FROM customers c
+LEFT JOIN orders o ON c.id = o.customer_id
+GROUP BY name;
+
+
+Masalah: grouping pakai name saja.
+
+Tugas:
+Perbaiki query agar:
+
+tidak menggabungkan customer dengan nama yang sama,
+
+tapi tetap menampilkan nama di output.
+
+SELECT c.name, SUM(o.amount)
+FROM customers c
+LEFT JOIN orders o ON c.id = o.customer_id
+GROUP BY c.id, c.name;
+
+7. Tampilkan semua negara, termasuk negara yang tidak memiliki order sama sekali,
+beserta total revenue (default 0 kalau tidak ada order).
+
+Gunakan COALESCE.
+
+select c.country, coalesce(sum(o.amount), 0) from customers c 
+left join orders o on c.id = o.customer_id
+group by c.country;
+
+8. Tampilkan setiap negara + jumlah distinct product yang dibeli negara itu.
+
+Hints: Negara Indonesia bisa beli 10 product, tapi distinct bisa cuma 4.
+
+Harus pakai subquery atau derived table.
+
+select c.country, count(distinct o.product) from customers c 
+left join orders o on c.id = o.customer_id
+group by c.country;
+
+9. 
+select c.id, c.name, o.product, count(o.product), sum(o.amount) from orders o
+inner join customers c on c.id = o.customer_id
+group by c.id, c.name, o.product
+having count(o.product) >= 2
+
+10.
+
+
+select pu.customer_id, pu.customer_name,
+sum(pu.amount), count(pu.product), avg(pu.amount) 
+from (select c.id as customer_id,
+c.name as customer_name, o.product as product, o.amount as amount from customers c
+inner join orders o on o.customer_id = c.id
+order by c.id, c.name)pu
+group by pu.customer_id, pu.customer_name
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

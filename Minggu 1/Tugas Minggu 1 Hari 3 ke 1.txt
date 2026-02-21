@@ -1,0 +1,323 @@
+🔷 A. Basic Aggregation (1–5)
+
+Tampilkan total amount seluruh order.
+select sum(o.amount) as total_amount_all_orders from orders o;
+49320000
+
+
+Tampilkan rata-rata amount seluruh order.
+select avg(o.amount) as avarage_amount_all_orders from orders o;
+6165000.000000000000
+
+
+Tampilkan nilai amount tertinggi dan terendah.
+select max(o.amount) as maximum_amount_all_orders,
+min(o.amount) as minimum_amount_all_orders
+from orders o;
+12000000	120000
+
+
+Tampilkan total jumlah order yang terjadi.
+select max(o.amount) as maximum_amount_all_orders,
+min(o.amount) as minimum_amount_all_orders,
+count(o.id) as total_orders
+from orders o;
+12000000	120000	8
+
+
+Tampilkan total produk unik yang pernah dibeli.
+select count(*) as total_unique_orders
+from (
+	select distinct(o.product) from orders o
+) uo;
+
+6
+
+versi lain:
+select count(distinct(o.product)) from orders o;
+6
+
+mana yang lebih baik?
+
+🔶 B. GROUP BY Customer (6–10)
+
+Tampilkan total amount per customer.
+select c.name, coalesce(sum(o.amount), 0) as total_amount
+from customers c left join orders o
+on o.customer_id = c.id
+group by c.id, c.name;
+"Abdul"	1200000
+"Joko"	0
+"Budi"	10000000
+"Osama Bin Laden"	12000000
+"Mr. Tim"	12000000
+"Asep"	3120000
+"Jamal"	1000000
+"Apage"	10000000
+
+Tampilkan total transaksi per negara.
+select c.country, count(o.id) as total_orders_per_country, sum(o.amount) as total_amount_per_country
+from customers c inner join orders o on c.id = o.customer_id
+group by c.country order by total_amount_per_country desc;
+"Indonesia"	6	25320000
+"Irak"	1	12000000
+"Netherland"	1	12000000
+
+
+Tampilkan total jumlah order per customer.
+select c.name, coalesce(count(o.id), 0) as total_order from customers c
+left join orders o on c.id = o.customer_id
+group by c.name;
+
+"Abdul"	1
+"Joko"	0
+"Budi"	1
+"Osama Bin Laden"	1
+"Mr. Tim"	1
+"Asep"	2
+"Jamal"	1
+"Apage"	1
+
+
+Tampilkan rata-rata nilai order per customer.
+select c.name, coalesce(avg(o.amount), 0) as avg_order_value from customers c
+left join orders o on c.id = o.customer_id
+group by c.name;
+"Abdul"	1200000.000000000000
+"Joko"	0
+"Budi"	10000000.000000000000
+"Osama Bin Laden"	12000000.000000000000
+"Mr. Tim"	12000000.000000000000
+"Asep"	1560000.000000000000
+"Jamal"	1000000.000000000000
+"Apage"	10000000.000000000000
+
+Tampilkan customer yang total belanjanya > 5.000.000.
+select c.name, coalesce(sum(o.amount),0) as total_value from customers c
+left join orders o on c.id = o.customer_id 
+group by c.name
+having coalesce(sum(o.amount),0) > 5000000
+order by total_value desc
+;
+
+"Osama Bin Laden"	12000000
+"Mr. Tim"	12000000
+"Budi"	10000000
+"Apage"	10000000
+
+🔶 C. GROUP BY Product (11–14)
+
+Tampilkan total revenue per product.
+select o.product, sum(o.amount) as total_reveneu_per_product from orders o
+group by o.product order by sum(o.amount) desc;
+
+"Laptop"	32000000
+"Mesiu"	12000000
+"Keyboard"	3000000
+"Monitor"	1200000
+"Meja"	1000000
+"Buku Tulis"	120000
+
+Tampilkan average revenue per product.
+select o.product, avg(o.amount) as avg_reveneu_per_product from orders o
+group by o.product order by avg(o.amount) desc;
+"Mesiu"	12000000.000000000000
+"Laptop"	10666666.666666666667
+"Keyboard"	3000000.000000000000
+"Monitor"	1200000.000000000000
+"Meja"	1000000.000000000000
+"Buku Tulis"	120000.000000000000
+
+
+Tampilkan produk dengan revenue tertinggi.
+select o.product, sum(o.amount) as total_reveneu_per_product from orders o
+group by o.product order by sum(o.amount) desc limit 1;
+
+"Laptop"	32000000
+
+atau pakai ini kalua takut ternyata ranking 1 nya ada 2 biji
+
+select product, sum(amount) from (
+	select product,  sum(amount) as amount,
+	rank() over (order by sum(amount) desc) as rnk
+	from orders
+	group by product
+) ranked
+where  rnk = 1
+group by product
+
+"Laptop"	32000000
+"Motor"	32000000
+
+lebih simple
+
+select o.product, sum(o.amount) from orders o group by o.product
+having sum(o.amount) = (
+	select max(sum_amount) from (
+		select sum(amount) as sum_amount
+		from orders group by product
+	)
+);
+"Motor"	49000000 <- saya tadi nambahin row jadi maklum agak beda
+
+kok bisa lain dengan yang sebelumnya dan bedanya apa
+
+Tampilkan negara mana yang paling sering membeli produk “Laptop”.
+select c.country, count(o.id) from customers c left join orders o
+on c.id = o.customer_id where o.product = 'Laptop'
+group by c.country order by count(o.id) desc limit 1
+
+"Indonesia"	2
+
+buat jaga jaga kalua ada 2 yang sama
+
+select c.country, count(o.id) from customers c left join orders o
+on c.id = o.customer_id where o.product = 'Laptop'
+group by c.country 
+having count(o.id) = (
+	select max(count_total) from (
+		select c.country, count(o.id) as count_total from orders o inner join customers c on c.id = o.customer_id where o.product = 'Laptop' group by c.country
+	)
+);
+
+"Indonesia"	2
+
+(berikan saya saran kalua ada praktek yang lebih baik) 
+
+🔶 D. HAVING (15–18)
+
+Tampilkan customer yang membeli lebih dari 1 product unique.
+
+cuma data fyi aja
+select c.name, o.product from customers c inner join 
+orders o
+on c.id = o.customer_id order by c.name, o.product
+
+"Abdul"	"Monitor"
+"Apage"	"Laptop"
+"Asep"	"Buku Tulis"
+"Asep"	"Keyboard"
+"Asep"	"Motor"
+"Asep"	"Motor"
+"Budi"	"Laptop"
+"Jamal"	"Meja"
+"Mr. Tim"	"Laptop"
+"Osama Bin Laden"	"Mesiu"
+
+nah ini:
+
+-- select distinct o.product, count(o.product), c.name from customers c inner join 
+-- orders o on c.id = o.customer_id
+-- group by c.name, o.product
+-- order by c.name, o.product;
+
+select pu.name, count(pu.name) as total_product_unique from (
+select distinct o.product, count(o.product), c.name from customers c inner join 
+orders o on c.id = o.customer_id
+group by c.name, o.product
+order by c.name, o.product
+) pu
+group by pu.name
+having count(pu.name) > 1;
+
+"Asep"	3
+
+lebih baik:
+select c.name, count(distinct o.product) from customers c
+inner join orders o on c.id = o.customer_id
+group by c.name
+having count(distinct o.product) > 1;
+
+Tampilkan customer yang jumlah order-nya minimal 2 transaksi.
+select c.name, count(o.product) as total_order from customers c
+inner join orders o on c.id = o.customer_id
+group by c.name
+having count(o.product) >= 2
+order by c.name;
+
+"Asep"	4
+
+Tampilkan product yang total revenue-nya > 3.000.000.
+
+select o.product, sum(o.amount) from orders o
+group by o.product
+having sum(o.amount) > 3000000;
+
+"Mesiu"	12000000
+"Motor"	49000000
+"Laptop"	32000000
+
+Tampilkan negara dengan total revenue > 5.000.000.
+select c.country, sum(o.amount) from customers c 
+inner join orders o on c.id = o.customer_id
+group by c.country
+having sum(o.amount) > 5000000;
+"Indonesia"	74320000
+"Irak"	12000000
+"Netherland"	12000000
+
+🔶 E. Combined Logic (19–20)
+
+Tampilkan daftar customer + total belanja + jumlah product unik yang dibeli.
+
+pegang dulu nih:
+select c.name, o.product, o.amount from customers c inner join 
+orders o
+on c.id = o.customer_id order by c.name, o.product
+"Abdul"	"Monitor"	1200000
+"Apage"	"Laptop"	10000000
+"Asep"	"Buku Tulis"	120000
+"Asep"	"Keyboard"	3000000
+"Asep"	"Motor"	17000000
+"Asep"	"Motor"	32000000
+"Budi"	"Laptop"	10000000
+"Jamal"	"Meja"	1000000
+"Mr. Tim"	"Laptop"	12000000
+"Osama Bin Laden"	"Mesiu"	12000000
+
+jawaban gweh:
+select pu.customer_id, pu.name, pu.product, count(pu.product) as total_product, sum(pu.amount) as total_amount  from (
+select distinct o.product as product, count(o.product), c.name as name, c.id as customer_id, o.amount from customers c inner join 
+orders o on c.id = o.customer_id
+group by c.name, o.product, c.id, o.amount
+order by c.name, o.product
+) pu
+group by pu.name, pu.customer_id, pu.product
+order by pu.name, pu.product;
+
+14	"Abdul"	"Monitor"	1	1200000
+15	"Apage"	"Laptop"	1	10000000
+12	"Asep"	"Buku Tulis"	1	120000
+12	"Asep"	"Keyboard"	1	3000000
+12	"Asep"	"Motor"	2	49000000
+11	"Budi"	"Laptop"	1	10000000
+13	"Jamal"	"Meja"	1	1000000
+16	"Mr. Tim"	"Laptop"	1	12000000
+17	"Osama Bin Laden"	"Mesiu"	1	12000000
+
+select c.name, count(distinct o.product), sum(o.amount) from customers c inner join 
+orders o
+on c.id = o.customer_id 
+group by c.name
+order by c.name;
+"Abdul"	1	1200000
+"Apage"	1	10000000
+"Asep"	3	52120000
+"Budi"	1	10000000
+"Jamal"	1	1000000
+"Mr. Tim"	1	12000000
+"Osama Bin Laden"	1	12000000
+
+Tampilkan negara + total belanja + order count, diurutkan revenue DESC.
+
+
+select c.country, sum(o.amount) as amount, count(o.id) as total_order from customers c
+inner join orders o on c.id = o.customer_id
+group by c.country
+order by amount desc
+
+"Indonesia"	74320000	8
+"Irak"	12000000	1
+"Netherland"	12000000	1
+
+

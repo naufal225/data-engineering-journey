@@ -1,0 +1,117 @@
+Tugas Minggu 1 Hari 4: Rank dan Dense Rank
+
+🧪 SOAL 1 — Ranking Produk Berdasarkan Total Revenue
+
+Tampilkan:
+
+product
+
+total_revenue
+
+rank
+
+dense_rank
+
+Urutkan paling tinggi ke rendah.
+
+with revenue as (
+select product, sum(amount) as total_revenue
+from orders group by product
+)
+select product, total_revenue,
+rank() over (order by total_revenue desc) as rnk,
+dense_rank() over (order by total_revenue desc) as dense_rnk
+from revenue order by rnk asc, dense_rnk asc
+
+"Motor"	49000000	1	1
+"Laptop"	32000000	2	2
+"Mesiu"	12000000	3	3
+"Keyboard"	3000000	4	4
+"Monitor"	1200000	5	5
+"Meja"	1000000	6	6
+"Buku Tulis"	120000	7	7
+
+🧪 SOAL 2 — Ambil 3 produk pendapatan tertinggi (kalau ada tie, ambil semua)
+
+Hint: pakai DENSE_RANK.
+
+select * from (
+select product, sum(amount) as total_revenue,
+rank() over (order by sum(amount) desc) as rnk,
+dense_rank() over (order by sum(amount) desc) as dense_rnk
+from orders group by product order by rnk asc, dense_rnk asc
+) where rnk <= 3
+
+"Motor"	49000000	1	1
+"Laptop"	32000000	2	2
+"Mesiu"	12000000	3	3
+
+🧪 SOAL 3 — Ranking transaksi terbesar per customer**
+
+Kolom minimal:
+
+customer_id
+
+product
+
+amount
+
+amount_rank
+
+select customer_id, product, amount, 
+rank() over (partition by customer_id order by amount desc) as amount_rank,
+dense_rank() over (partition by customer_id order by amount desc) as amount_dense_rank
+from orders order by customer_id asc, amount_rank asc, amount_dense_rank asc
+
+11	"Laptop"	10000000	1	1
+12	"Motor"	32000000	1	1
+12	"Motor"	17000000	2	2
+12	"Keyboard"	3000000	3	3
+12	"Buku Tulis"	120000	4	4
+13	"Meja"	1000000	1	1
+14	"Monitor"	1200000	1	1
+15	"Laptop"	10000000	1	1
+16	"Laptop"	12000000	1	1
+17	"Mesiu"	12000000	1	1
+
+
+🧪 SOAL 4 — Ambil transaksi ranking 1 & 2 setiap customer (gunakan RANK, bukan ROW_NUMBER)**
+
+select * from (
+select customer_id, product, amount, 
+rank() over (partition by customer_id order by amount desc) as amount_rank
+from orders order by customer_id asc, amount_rank asc
+) where amount_rank <= 2
+
+11	"Laptop"	10000000	1
+12	"Motor"	32000000	1
+12	"Motor"	17000000	2
+13	"Meja"	1000000	1
+14	"Monitor"	1200000	1
+15	"Laptop"	10000000	1
+16	"Laptop"	12000000	1
+17	"Mesiu"	12000000	1
+
+🧪 SOAL 5 — Tampilkan hanya transaksi dengan ranking = 1 (highest spending order) untuk setiap negara.**
+
+Hint:
+
+Join customers → country
+
+Partition by country
+
+Order by amount DESC
+
+Filter rn = 1
+
+select * from (
+select c.country, o.product, o.amount, 
+rank() over (partition by c.country order by o.amount desc) as amount_rank
+from orders o join customers c
+on c.id = o.customer_id 
+order by o.customer_id asc, amount_rank asc, amount_dense_rank asc
+) where amount_rank = 1
+
+"Indonesia"	"Motor"	32000000	1	
+"Netherland"	"Laptop"	12000000	1	
+"Irak"	"Mesiu"	12000000	1	

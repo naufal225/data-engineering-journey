@@ -1,0 +1,150 @@
+Minggu 1 Hari ke 5
+
+
+Pembukaan
+
+1. Penggunaan Lag, untuk melihat nilai kolom pada row sebelumnya
+
+query:
+
+select id, customer_id, product, amount,
+lag(amount) over(partition by customer_id order by created_at) as prev_amount,
+amount - lag(amount) over(partition by customer_id order by created_at) as delta,
+case when lag(amount) over(partition by customer_id order by created_at) is null then 'FIRST'
+when amount > lag(amount) over(partition by customer_id order by created_at) then 'UP'
+when amount < lag(amount) over(partition by customer_id order by created_at) then 'DOWN'
+end as trend,
+created_at
+from orders where customer_id is not null order by customer_id, created_at
+
+hasil:
+
+11	11	"Laptop"	10000000					"FIRST"		"2025-12-01"
+12	12	"Keyboard"	3000000						"FIRST"		"2025-12-01"
+20	12	"Motor"		17000000	3000000		14000000	"UP"		"2025-12-06"
+18	12	"Buku Tulis"	120000		17000000	-16880000	"DOWN"		"2025-12-06"
+19	12	"Motor"		32000000	120000		31880000	"UP"		"2025-12-06"
+13	13	"Meja"		1000000						"FIRST"		"2025-12-01"
+14	14	"Monitor"	1200000						"FIRST"		"2025-12-01"
+15	15	"Laptop"	10000000					"FIRST"		"2025-12-01"
+16	16	"Laptop"	12000000					"FIRST"		"2025-12-05"
+17	17	"Mesiu"		12000000					"FIRST"		"2025-12-05"
+
+
+2. Penggunaan Lead, untuk melihat nilai kolom pada row sesudahnya
+
+query:
+
+select id, customer_id, product, amount,
+lead(amount) over(partition by customer_id order by created_at) as next_value, created_at
+from orders order by customer_id, created_at;
+
+hasil:
+
+11	11	"Laptop"	10000000			"2025-12-01"
+12	12	"Keyboard"	3000000		32000000	"2025-12-01"
+19	12	"Motor"		32000000	17000000	"2025-12-06"
+20	12	"Motor"		17000000	120000		"2025-12-06"
+18	12	"Buku Tulis"	120000				"2025-12-06"
+13	13	"Meja"		1000000				"2025-12-01"
+14	14	"Monitor"	1200000				"2025-12-01"
+15	15	"Laptop"	10000000			"2025-12-01"
+16	16	"Laptop"	12000000			"2025-12-05"
+17	17	"Mesiu"		12000000			"2025-12-05"
+21		"Apa aja"	10000				"2025-12-20"
+
+
+
+
+Perhatikan order by, pahami perbedaan penggunaanya dalam window dan diluar window
+
+Pehatikan partition by untuk mengelompokannya berdasarkan apa, customer_id, product, costumer.country, dan lain lain
+
+Tips penting -> agar memastikan data di window tetap unik, pastikan gunakan id
+
+
+
+Running Total / Cumulative Sum
+
+Running total adalah jumlah kumulatif dari data-data yang berurutan.
+contoh:
+
+query:
+
+select id, customer_id, product, created_at, amount,
+sum(amount) over (partition by customer_id order by id, created_at) as running_total from orders order by customer_id, created_at
+Hasil:
+
+11	11	"Laptop"	"2025-12-01"	10000000	10000000
+12	12	"Keyboard"	"2025-12-01"	3000000		3000000
+18	12	"Buku Tulis"	"2025-12-06"	120000		3120000
+19	12	"Motor"		"2025-12-06"	32000000	35120000
+20	12	"Motor"		"2025-12-06"	17000000	52120000
+13	13	"Meja"		"2025-12-01"	1000000		1000000
+14	14	"Monitor"	"2025-12-01"	1200000		1200000
+15	15	"Laptop"	"2025-12-01"	10000000	10000000
+16	16	"Laptop"	"2025-12-05"	12000000	12000000
+17	17	"Mesiu"		"2025-12-05"	12000000	12000000
+21		"Apa aja"	"2025-12-20"	10000		10000
+
+query:
+
+select id, product, created_at, amount,
+sum(amount) over (partition by product order by id, created_at) as running_total
+from orders order by product, created_at
+hasil:
+
+21	"Apa aja"	"2025-12-20"	10000		10000
+18	"Buku Tulis"	"2025-12-06"	120000		120000
+12	"Keyboard"	"2025-12-01"	3000000		3000000
+11	"Laptop"	"2025-12-01"	10000000	10000000
+15	"Laptop"	"2025-12-01"	10000000	20000000
+16	"Laptop"	"2025-12-05"	12000000	32000000
+13	"Meja"		"2025-12-01"	1000000		1000000
+17	"Mesiu"		"2025-12-05"	12000000	12000000
+14	"Monitor"	"2025-12-01"	1200000		1200000
+19	"Motor"		"2025-12-06"	32000000	32000000
+20	"Motor"		"2025-12-06"	17000000	49000000
+
+penggunaan rows kalau missal timestamp sama
+
+query:
+
+select id, product, created_at, amount,
+sum(amount) over (partition by product order by id, created_at rows between unbounded preceding and current row) as running_total
+from orders order by product, created_at
+
+hasil:
+21	"Apa aja"	"2025-12-20"	10000		10000
+18	"Buku Tulis"	"2025-12-06"	120000		120000
+12	"Keyboard"	"2025-12-01"	3000000		3000000
+11	"Laptop"	"2025-12-01"	10000000	10000000
+15	"Laptop"	"2025-12-01"	10000000	20000000
+16	"Laptop"	"2025-12-05"	12000000	32000000
+13	"Meja"		"2025-12-01"	1000000		1000000
+17	"Mesiu"		"2025-12-05"	12000000	12000000
+14	"Monitor"	"2025-12-01"	1200000		1200000
+19	"Motor"		"2025-12-06"	32000000	32000000
+20	"Motor"		"2025-12-06"	17000000	49000000
+variasi bingkai yang sering digunakan:
+
+ROWS BETWEEN 1 PRECEDING AND CURRENT ROW: Hanya menjumlahkan baris ini dan 1 baris sebelumnya (biasanya untuk menghitung pertumbuhan/growth).
+
+ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING: Menjumlahkan dari baris ini sampai baris paling akhir (kebalikan dari running total).
+
+ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING: Menjumlahkan seluruh isi partisi (hasilnya akan sama di setiap baris).
+
+🔒 Rule Praktis (WAJIB DIHAFAL)
+Kalau ORDER BY bukan unik → PAKAI ROWS
+
+
+Perbedaan Rows dan Range
+
+Perbedaan rows dan range adalah pada cara perhitungan nilai yang dilakukan. Kalau rows berdasarkan baris fisik, tiap baris dihitung berbeda, sementara range, tiap partisi nya dianggap sama sekalipun beda baris. Pastikan kalau mau hitung running total, maka pakai rows jika ada timestamp atau data order by yang sama.
+Rows jarang menjadi sumber bug produksi, namun range sering.
+
+Default window frame di sql adalah range, dan itu tidak intuitif, sehingga pada perhitungan yang rentan dengan nilai yang sama, maka pakai rows saja.
+
+Kalau pakai ORDER BY di window function dan logikanya SEKUENSIAL → TULIS ROWS
+ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+
