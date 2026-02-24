@@ -5,7 +5,7 @@
 - name: Clementina DuBuque, 10 posts
 - name: Clementine Bauch, 10 posts
 
-2). Average title lenght overall:
+2). Average title length overall:
 - 39.52 characters
 
 3). Top 3 users by average body length:

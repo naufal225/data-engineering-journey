@@ -30,7 +30,7 @@ lines.append("1). Top 3 users by number of posts:")
 for name, cnt in top_users.items():
     lines.append(f"- name: {name}, {int(cnt)} posts")
     
-lines.append("\n2). Average title lenght overall:")
+lines.append("\n2). Average title length overall:")
 lines.append(f"- {avg_title_length:.2f} characters")
 
 lines.append("\n3). Top 3 users by average body length:")
