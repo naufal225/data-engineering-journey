@@ -1,4 +1,6 @@
+
 === API Ingestion -> Join -> Analytics ===
+
 
 1). Top 3 users by number of posts:
 - name: Chelsey Dietrich, 10 posts
@@ -9,6 +11,6 @@
 - 39.52 characters
 
 3). Top 3 users by average body length:
-- name: Patricia Lebsack, 182 characters
-- name: Leanne Graham, 164 characters
-- name: Kurtis Weissnat, 163 characters
+- name: Patricia Lebsack, 182.30 characters
+- name: Leanne Graham, 164.50 characters
+- name: Kurtis Weissnat, 163.50 characters
