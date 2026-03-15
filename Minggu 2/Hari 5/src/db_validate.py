@@ -4,16 +4,16 @@ from psycopg2.extensions import cursor
 def fetch_one(cur: cursor, sql: str):
     cur.execute(sql)
     row = cur.fetchone()[0]
-    if row in None:
+    if row is None:
         return None
-    return row[0]
+    return row
 
 def fetch_all(cur: cursor, sql: str) -> List[Tuple]:
     cur.execute(sql)
-    rows = cur.fetchall()
-    if rows in None:
+    row = cur.fetchall()
+    if row is None:
         return None
-    return rows
+    return row
 
 def validate_db(cur: cursor, expected_rows: int = 100):
     total = fetch_one(cur, "SELECT COUNT(*) from joined_analytics;")
@@ -31,7 +31,7 @@ def validate_db(cur: cursor, expected_rows: int = 100):
     avg_title = fetch_one(cur, "SELECT AVG(title_length) FROM joined_analytics;")
     
     return {
-        "total_rows:":total,
-        "top 3": top3,
-        "average_title_length:":avg_title
+        "total_rows":total,
+        "top3": top3,
+        "avg_title_length":avg_title
     }

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 def _required_env(key: str) -> str:
     val = os.getenv(key=key)
     if not val:
-        raise RuntimeError(f"Missing required environtment variable: ${key}")
+        raise RuntimeError(f"Missing required environtment variable: {key}")
     return val
 
 def _env(key: str, default: str) -> str:
@@ -42,6 +42,6 @@ class PgConfig:
         
     def safe_str(self) -> str:
         return (
-            f"PgConfig(host=${self.host}, port=${self.port}, dbname=${self.dbname}, "
-            f"user={self.user}, password=${mask_secret(self.password)})"
+            f"PgConfig(host={self.host}, port={self.port}, dbname={self.dbname}, "
+            f"user={self.user}, password={mask_secret(self.password)})"
         )
