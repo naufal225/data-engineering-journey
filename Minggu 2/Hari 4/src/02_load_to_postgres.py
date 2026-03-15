@@ -3,10 +3,20 @@ import requests
 import psycopg2
 from psycopg2.extras import execute_values
 import os
+from dotenv import load_dotenv
+import logging
+
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s"
+)
 
 def fetch_request(url:str):
     r = requests.get(url=url, timeout=10)
     r.raise_for_status()
+    logging.info("Fetched %d from %s", len(r.json()), url)
     return r.json()
 
 def normalize_users(df: pd.DataFrame):
@@ -56,10 +66,16 @@ validate(df_joined)
 
 # connect postgres
 
+# print(repr(os.getenv("PGHOST")))
+# print(repr(os.getenv("PGPORT")))
+# print(repr(os.getenv("PGDATABASE")))
+# print(repr(os.getenv("PGUSER")))
+# print(repr(os.getenv("PGPASSWORD")))
+
 conn = psycopg2.connect(
     host=os.getenv("PGHOST", "localhost"),
     port=os.getenv("PGPORT", "5432"),
-    database=os.getenv("PGDATABASE", "praktek_etl_simpel"),
+    database=os.getenv("PGDATABASE", "praktek_etl_simple"),
     user=os.getenv("PGUSER", "postgres"),
     password=os.getenv("PGPASSWORD", "nma225")
 )
@@ -99,11 +115,13 @@ try:
         
     conn.commit()
     
-    print("Inserted/Upserted rows:", len(df_joined))
-    print("Total:",total)
-    print("Top 3:", top3)
+    logging.info("Inserted/Upserted rows: %d", len(df_joined))
+    logging.info("Total: %d",total)
+    logging.info("Top 3: %s", top3)
+    
 except Exception as e:
     conn.rollback()
+    logging.error("Pipeline failed: %s", e)
     raise
 finally:
     conn.close()
