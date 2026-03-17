@@ -1,0 +1,143 @@
+2026-03-15 16:30:51 | INFO | ETL Start
+2026-03-15 16:35:02 | INFO | ETL Start
+2026-03-15 16:35:02 | ERROR | Exception while load config: Missing required environtment variable: $PGDATABASE
+Traceback (most recent call last):
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 69, in main
+    cfg = PgConfig.from_env()
+          ^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\config.py", line 32, in from_env
+    dbname = _required_env("PGDATABASE")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\config.py", line 7, in _required_env
+    raise RuntimeError(f"Missing required environtment variable: ${key}")
+RuntimeError: Missing required environtment variable: $PGDATABASE
+2026-03-15 16:36:28 | INFO | ETL Start
+2026-03-15 16:36:28 | ERROR | Exception while load config: Missing required environtment variable: $PGDATABASE
+Traceback (most recent call last):
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 69, in main
+    cfg = PgConfig.from_env()
+          ^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\config.py", line 32, in from_env
+    dbname = _required_env("PGDATABASE")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\config.py", line 7, in _required_env
+    raise RuntimeError(f"Missing required environtment variable: ${key}")
+RuntimeError: Missing required environtment variable: $PGDATABASE
+2026-03-15 16:38:13 | INFO | ETL Start
+2026-03-15 16:38:13 | INFO | Config loaded: PgConfig(host=$localhost, port=$5432, dbname=$praktek_etl_simpel, user=postgres, password=$nma***)
+2026-03-15 16:38:13 | INFO | Loaded CSV: d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\input\joined.csv | rows = 100 cols= 8
+2026-03-15 16:38:13 | INFO | Dataframe validation: OK
+2026-03-15 16:38:13 | INFO | DB connected
+2026-03-15 16:38:13 | ERROR | ETL failed -> rollback executed
+Traceback (most recent call last):
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 94, in main
+    inserted = upsert_joined(cur, df)
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 61, in upsert_joined
+    execute_values(cur, sql, rows, page_size=1000)
+  File "C:\Users\Naufal\AppData\Local\Programs\Python\Python312\Lib\site-packages\psycopg2\extras.py", line 1288, in execute_values
+    pre, post = _split_sql(sql)
+                ^^^^^^^^^^^^^^^
+  File "C:\Users\Naufal\AppData\Local\Programs\Python\Python312\Lib\site-packages\psycopg2\extras.py", line 1329, in _split_sql
+    raise ValueError("unsupported format character: '%s'"
+ValueError: unsupported format character: 'S'
+2026-03-15 16:38:13 | INFO | DB connection closed
+2026-03-15 16:39:28 | INFO | ETL Start
+2026-03-15 16:39:28 | INFO | Config loaded: PgConfig(host=$localhost, port=$5432, dbname=$praktek_etl_simpel, user=postgres, password=$nma***)
+2026-03-15 16:39:28 | INFO | Loaded CSV: d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\input\joined.csv | rows = 100 cols= 8
+2026-03-15 16:39:28 | INFO | Dataframe validation: OK
+2026-03-15 16:39:28 | INFO | DB connected
+2026-03-15 16:39:28 | ERROR | ETL failed -> rollback executed
+Traceback (most recent call last):
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 94, in main
+    inserted = upsert_joined(cur, df)
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 61, in upsert_joined
+    execute_values(cur, sql, rows, page_size=1000)
+  File "C:\Users\Naufal\AppData\Local\Programs\Python\Python312\Lib\site-packages\psycopg2\extras.py", line 1299, in execute_values
+    cur.execute(b''.join(parts))
+psycopg2.errors.SyntaxError: 'sintaks error' pada atau didekat « $ »
+LINE 2:         INSERT INTO joined_analytics $post_id,user_id,user_n...
+                                             ^
+
+2026-03-15 16:39:28 | INFO | DB connection closed
+2026-03-15 16:40:42 | INFO | ETL Start
+2026-03-15 16:40:42 | INFO | Config loaded: PgConfig(host=$localhost, port=$5432, dbname=$praktek_etl_simpel, user=postgres, password=$nma***)
+2026-03-15 16:40:42 | INFO | Loaded CSV: d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\input\joined.csv | rows = 100 cols= 8
+2026-03-15 16:40:42 | INFO | Dataframe validation: OK
+2026-03-15 16:40:42 | INFO | DB connected
+2026-03-15 16:40:42 | ERROR | ETL failed -> rollback executed
+Traceback (most recent call last):
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 94, in main
+    inserted = upsert_joined(cur, df)
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 61, in upsert_joined
+    execute_values(cur, sql, rows, page_size=1000)
+  File "C:\Users\Naufal\AppData\Local\Programs\Python\Python312\Lib\site-packages\psycopg2\extras.py", line 1299, in execute_values
+    cur.execute(b''.join(parts))
+psycopg2.errors.SyntaxError: 'sintaks error' pada atau didekat « post_id »
+LINE 2:         INSERT INTO joined_analytics post_id,user_id,user_na...
+                                             ^
+
+2026-03-15 16:40:42 | INFO | DB connection closed
+2026-03-15 16:41:18 | INFO | ETL Start
+2026-03-15 16:41:18 | INFO | Config loaded: PgConfig(host=$localhost, port=$5432, dbname=$praktek_etl_simpel, user=postgres, password=$nma***)
+2026-03-15 16:41:18 | INFO | Loaded CSV: d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\input\joined.csv | rows = 100 cols= 8
+2026-03-15 16:41:18 | INFO | Dataframe validation: OK
+2026-03-15 16:41:18 | INFO | DB connected
+2026-03-15 16:41:18 | ERROR | ETL failed -> rollback executed
+Traceback (most recent call last):
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 94, in main
+    inserted = upsert_joined(cur, df)
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 61, in upsert_joined
+    execute_values(cur, sql, rows, page_size=1000)
+  File "C:\Users\Naufal\AppData\Local\Programs\Python\Python312\Lib\site-packages\psycopg2\extras.py", line 1299, in execute_values
+    cur.execute(b''.join(parts))
+psycopg2.errors.SyntaxError: 'sintaks error' pada atau didekat « user_id »
+LINE 6:              user_id = EXCLUDED.user_id
+                     ^
+
+2026-03-15 16:41:18 | INFO | DB connection closed
+2026-03-15 16:41:38 | INFO | ETL Start
+2026-03-15 16:41:38 | INFO | Config loaded: PgConfig(host=$localhost, port=$5432, dbname=$praktek_etl_simpel, user=postgres, password=$nma***)
+2026-03-15 16:41:38 | INFO | Loaded CSV: d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\input\joined.csv | rows = 100 cols= 8
+2026-03-15 16:41:38 | INFO | Dataframe validation: OK
+2026-03-15 16:41:38 | INFO | DB connected
+2026-03-15 16:41:38 | INFO | Upsert completed | rows=100
+2026-03-15 16:41:38 | ERROR | ETL failed -> rollback executed
+Traceback (most recent call last):
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 97, in main
+    results = validate_db(cur, expected_rows=len(df))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\db_validate.py", line 19, in validate_db
+    total = fetch_one(cur, "SELECT COUNT(*) from joined_analytics;")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\db_validate.py", line 7, in fetch_one
+    if row in None:
+       ^^^^^^^^^^^
+TypeError: argument of type 'NoneType' is not iterable
+2026-03-15 16:41:38 | INFO | DB connection closed
+2026-03-15 16:42:25 | INFO | ETL Start
+2026-03-15 16:42:25 | INFO | Config loaded: PgConfig(host=$localhost, port=$5432, dbname=$praktek_etl_simpel, user=postgres, password=$nma***)
+2026-03-15 16:42:25 | INFO | Loaded CSV: d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\input\joined.csv | rows = 100 cols= 8
+2026-03-15 16:42:25 | INFO | Dataframe validation: OK
+2026-03-15 16:42:25 | INFO | DB connected
+2026-03-15 16:42:25 | INFO | Upsert completed | rows=100
+2026-03-15 16:42:25 | ERROR | ETL failed -> rollback executed
+Traceback (most recent call last):
+  File "d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\src\etl_load.joined.py", line 99, in main
+    results["total_rows"], float(results["avg_title_length"]), results["top3"])
+    ~~~~~~~^^^^^^^^^^^^^^
+KeyError: 'total_rows'
+2026-03-15 16:42:25 | INFO | DB connection closed
+2026-03-15 16:43:16 | INFO | ETL Start
+2026-03-15 16:43:16 | INFO | Config loaded: PgConfig(host=$localhost, port=$5432, dbname=$praktek_etl_simpel, user=postgres, password=$nma***)
+2026-03-15 16:43:16 | INFO | Loaded CSV: d:\My Knowledge Base\data-engineering-journey\Minggu 2\Hari 5\input\joined.csv | rows = 100 cols= 8
+2026-03-15 16:43:16 | INFO | Dataframe validation: OK
+2026-03-15 16:43:16 | INFO | DB connected
+2026-03-15 16:43:16 | INFO | Upsert completed | rows=100
+2026-03-15 16:43:16 | INFO | DB validation OK | total_rows=100 | avg_title_length=39.52 | top3=[('Chelsey Dietrich', 10), ('Clementina DuBuque', 10), ('Clementine Bauch', 10)]
+2026-03-15 16:43:16 | INFO | Commit success.
+2026-03-15 16:43:16 | INFO | DB connection closed
+2026-03-15 16:43:16 | INFO | ETL end | duration=0.05s
